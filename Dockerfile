@@ -11,9 +11,16 @@ COPY . /src/
 
 # Maven deploy
 RUN mvn -e -s .m2/settings.xml clean deploy
+RUN ls -lrt /src/target/*
+RUN ls -lrt /src/*
 
 ######## Dependencies ########
 FROM alpine:3.16 as deps
+
+WORKDIR /app/
+
+# download OTLP javaagent as a dependency and we can copy it into the final image
+RUN wget -O opentelemetry-javaagent.jar https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar
 
 ######## Final Image  ########
 FROM ${BASE_FINAL_IMAGE}
@@ -40,7 +47,8 @@ USER non-priv
 
 # Copy code binary
 COPY --chown=${UID}:${GID} --from=build /src/target/demo-java-service.jar /app/demo-java-service.jar
-
+COPY --chown=${UID}:${GID} --from=deps /app/opentelemetry-javaagent.jar /app/opentelemetry-javaagent.jar
+COPY --chown=${UID}:${GID} --from=build /src/entrypoint.sh /app/entrypoint.sh
 
 # move /tmp content into /tmp-pre-boot so entrypoint.sh can copy it back after mounting /tmp
 RUN cp -R /tmp/. /tmp-pre-boot/
