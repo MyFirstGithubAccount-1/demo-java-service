@@ -8,12 +8,16 @@ WORKDIR /src
 # this copy uses the .dockerignore to only copy src .m2 and pom.xml
 COPY . /src/
 
-
 # Maven deploy
 RUN mvn -e -s .m2/settings.xml clean deploy
 
 ######## Dependencies ########
 FROM alpine:3.16 as deps
+
+WORKDIR /app/
+
+# download OTLP javaagent as a dependency and we can copy it into the final image
+RUN wget -O opentelemetry-javaagent.jar https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar
 
 ######## Final Image  ########
 FROM ${BASE_FINAL_IMAGE}
@@ -40,12 +44,11 @@ USER non-priv
 
 # Copy code binary
 COPY --chown=${UID}:${GID} --from=build /src/target/demo-java-service.jar /app/demo-java-service.jar
-
+COPY --chown=${UID}:${GID} --from=deps /app/opentelemetry-javaagent.jar /app/opentelemetry-javaagent.jar
+COPY --chown=${UID}:${GID} --from=build /src/entrypoint.sh /app/entrypoint.sh
 
 # move /tmp content into /tmp-pre-boot so entrypoint.sh can copy it back after mounting /tmp
 RUN cp -R /tmp/. /tmp-pre-boot/
 
-#!/bin/bash
-echo "Copying /tmp-pre-boot into /tmp"
-cp -fr /tmp-pre-boot/. /tmp/
-java $JAVA_OPTS -jar /app/demo-java-service.jar
+#Run plugin
+ENTRYPOINT ["/app/entrypoint.sh"]
