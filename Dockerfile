@@ -45,7 +45,5 @@ COPY --chown=${UID}:${GID} --from=build /src/target/demo-java-service.jar /app/d
 # move /tmp content into /tmp-pre-boot so entrypoint.sh can copy it back after mounting /tmp
 RUN cp -R /tmp/. /tmp-pre-boot/
 
-#!/bin/bash
-echo "Copying /tmp-pre-boot into /tmp"
-cp -fr /tmp-pre-boot/. /tmp/
-java $JAVA_OPTS -jar /app/demo-java-service.jar
+#Run plugin
+ENTRYPOINT ["/app/entrypoint.sh"]

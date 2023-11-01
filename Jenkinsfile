@@ -106,7 +106,7 @@
               sh "mkdir -p .m2 || true"
               sh "cp $SETTINGS_XML .m2/settings.xml" 
               sh '''
-                DOCKER_BUILDKIT=0 docker build --pull -t $TARGET . \
+                docker build --pull -t $TARGET . \
                     --label "org.opencontainers.image.created=`date -u +%Y-%m-%dT%H:%M:%SZ`" \
                     --label "org.opencontainers.image.authors=${AUTHOR}" \
                     --label "org.opencontainers.image.url=${TARGET_GIT_TAG}" \
