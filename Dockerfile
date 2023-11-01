@@ -8,11 +8,8 @@ WORKDIR /src
 # this copy uses the .dockerignore to only copy src .m2 and pom.xml
 COPY . /src/
 
-
 # Maven deploy
 RUN mvn -e -s .m2/settings.xml clean deploy
-RUN ls -lrt /src/target/*
-RUN ls -lrt /src/*
 
 ######## Dependencies ########
 FROM alpine:3.16 as deps
